@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download App - aria2c & yt-dlp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .flash-message {
+            padding: 0.75rem 1.25rem;
+            margin-bottom: 1rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+        }
+        .flash-message.error {
+            background-color: #fee2e2;
+            color: #ef4444;
+            border: 1px solid #fca5a5;
+        }
+        .flash-message.success {
+            background-color: #d1fae5;
+            color: #10b981;
+            border: 1px solid #6ee7b7;
+        }
+        .flash-message.info {
+            background-color: #e0f2fe;
+            color: #0ea5e9;
+            border: 1px solid #7dd3fc;
+        }
+        .flash-message.warning {
+            background-color: #fffbeb;
+            color: #f59e0b;
+            border: 1px solid #fcd34d;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 sm:p-6 md:p-8">
+    <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-xl">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Download App</h1>
+            <a href="{{ url_for('logout') }}" class="text-blue-600 hover:text-blue-800 font-medium">Logout</a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="mb-4">
+                    {% for category, message in messages %}
+                        <li class="flash-message {{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('download') }}" method="POST" class="space-y-4 mb-6">
+            <div>
+                <label for="url" class="block text-sm font-medium text-gray-700 mb-1">URL:</label>
+                <input type="url" id="url" name="url" required placeholder="https://example.com/video.mp4"
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="tool" class="block text-sm font-medium text-gray-700 mb-1">Download Tool:</label>
+                <select id="tool" name="tool" required
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <option value="yt-dlp">yt-dlp (YouTube, etc.)</option>
+                    <option value="aria2c">aria2c (General HTTP/FTP)</option>
+                </select>
+            </div>
+
+            <div class="flex items-center">
+                <input type="checkbox" id="upload_to_gdrive" name="upload_to_gdrive" class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded">
+                <label for="upload_to_gdrive" class="ml-2 block text-sm text-gray-900">Google Drive သို့ Upload လုပ်မည်</label>
+            </div>
+
+            {% if not gdrive_authorized %}
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 text-yellow-800">
+                            <!-- Warning Icon -->
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M8.257 3.341A9.995 9.995 0 0110 2a9.995 9.995 0 011.743 1.341c.883.673 1.613 1.488 2.183 2.417.57.929.913 1.954 1.028 3.033.116 1.08.083 2.18-.094 3.25-.177 1.07-.48 2.103-.902 3.098a9.995 9.995 0 01-1.743 1.341c-.883.673-1.613 1.488-2.183 2.417-.57.929-.913 1.954-1.028 3.033-.116 1.08-.083 2.18.094 3.25.177 1.07.48 2.103.902 3.098a9.995 9.995 0 011.743 1.341c.883.673 1.613 1.488 2.183 2.417.57.929.913 1.954 1.028 3.033.116 1.08.083 2.18-.094 3.25-.177 1.07-.48 2.103-.902 3.098a9.995 9.995 0 01-1.743 1.341c-.883.673-1.613 1.488-2.183 2.417-.57.929-.913 1.954-1.028 3.033-.116 1.08-.083 2.18-.094 3.25-.177 1.07-.48 2.103-.902 3.098zM10 4a6 6 0 100 12 6 6 0 000-12z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3 text-sm text-yellow-800">
+                            Google Drive သို့ upload လုပ်ရန်အတွက် Google Drive ကို ဦးစွာချိတ်ဆက်ရန်လိုအပ်ပါသည်။
+                        </div>
+                    </div>
+                    <div class="mt-3 text-sm">
+                        <a href="{{ url_for('authorize_gdrive') }}"
+                           class="font-medium text-yellow-700 hover:text-yellow-900 underline">
+                            Google Drive ကို ချိတ်ဆက်ရန် ဤနေရာကို နှိပ်ပါ
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+
+            <button type="submit"
+                    class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out">
+                Download
+            </button>
+        </form>
+
+        {% if output %}
+            <div class="bg-gray-50 p-4 rounded-md border border-gray-200 mb-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Command Output:</h3>
+                <pre class="whitespace-pre-wrap text-sm text-gray-700 bg-gray-100 p-3 rounded-md overflow-auto max-h-60">{{ output }}</pre>
+            </div>
+        {% endif %}
+
+        {% if error %}
+            <div class="bg-red-50 p-4 rounded-md border border-red-200">
+                <h3 class="text-lg font-semibold text-red-800 mb-2">Error:</h3>
+                <pre class="whitespace-pre-wrap text-sm text-red-700 bg-red-100 p-3 rounded-md overflow-auto max-h-60">{{ error }}</pre>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
